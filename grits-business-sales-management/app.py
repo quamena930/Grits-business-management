@@ -1310,6 +1310,7 @@ def delete_supplier(supplier_id):
     if supplier is None:
         abort(404)
 
+
     if supplier.products:
         flash(
             f"Can't delete '{supplier.name}' \u2014 {len(supplier.products)} product(s) are linked to it. "
