@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Inventory \u2014 {{ config.BUSINESS_NAME }}{% endblock %}
+{% block page_title %}Inventory{% endblock %}
+{% block page_subtitle %}<div class="page-subtitle">Manage the catalogue, pricing, and stock on hand.</div>{% endblock %}
+
+{% block content %}
+<div class="grain-rule"><span></span><span></span><span></span></div>
+
+<div class="card">
+  <div class="section-head" style="margin-bottom:16px;">
+    <h2 class="card-title" style="margin-bottom:0;">Catalogue</h2>
+    {% if current_user.role in ['admin', 'manager'] %}
+      <a href="{{ url_for('add_product') }}" class="btn btn-gold">+ Add product</a>
+    {% endif %}
+  </div>
+
+  <form method="GET" class="filter-bar">
+    <div class="field grow">
+      <label>Search</label>
+      <input type="text" name="q" value="{{ q }}" placeholder="Name, SKU, or barcode&hellip;">
+    </div>
+    <div class="field">
+      <label>Category</label>
+      <select name="category">
+        {% for value, display in search_form.category.choices %}
+          <option value="{{ value }}" {% if value == category %}selected{% endif %}>{{ display }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label>Stock status</label>
+      <select name="status">
+        {% for value, display in search_form.status.choices %}
+          <option value="{{ value }}" {% if value == status %}selected{% endif %}>{{ display }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field" style="flex:0;">
+      <button type="submit" class="btn btn-primary">Filter</button>
+    </div>
+    {% if q or category or status %}
+      <div class="field" style="flex:0;">
+        <a class="btn btn-outline" href="{{ url_for('products') }}">Clear</a>
+      </div>
+    {% endif %}
+  </form>
+
+  <div class="table-wrap" style="margin-top:16px;">
+    {% if products %}
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th><th>Category</th><th>Brand</th><th>Supplier</th>
+            <th class="text-right">Cost</th><th class="text-right">Price</th>
+            <th class="text-right">Stock</th><th>Status</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in products %}
+            <tr>
+              <td>
+                <div class="product-cell">
+                  {% if p.image_filename %}
+                    <img class="thumb" src="{{ url_for('static', filename='images/products/' + p.image_filename) }}" alt="">
+                  {% else %}
+                    <span class="thumb-placeholder">{{ p.name[0]|upper }}</span>
+                  {% endif %}
+                  <div class="product-cell-name">
+                    <span>{{ p.name }}</span>
+                    <span class="product-cell-sku">{{ p.sku }}</span>
+                  </div>
+                </div>
+              </td>
+              <td>{{ p.category or '\u2014' }}</td>
+              <td>{{ p.brand or '\u2014' }}</td>
+              <td>{{ p.supplier.name if p.supplier else '\u2014' }}</td>
+              <td class="text-right num">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(p.cost_price) }}</td>
+              <td class="text-right num">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(p.selling_price) }}</td>
+              <td class="text-right num">{{ p.stock_quantity }}</td>
+              <td>
+                {% if p.stock_status == 'out' %}
+                  <span class="badge badge-out">Out of stock</span>
+                {% elif p.stock_status == 'low' %}
+                  <span class="badge badge-low">Low stock</span>
+                {% else %}
+                  <span class="badge badge-ok">In stock</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if current_user.role in ['admin', 'manager'] %}
+                <div class="row-actions">
+                  <a class="btn-link-text" href="{{ url_for('edit_product', product_id=p.id) }}">Edit</a>
+                  <form method="POST" action="{{ url_for('delete_product', product_id=p.id) }}"
+                        onsubmit="return requestConfirm(this, 'Delete {{ p.name }}? This cannot be undone.');">
+                    <button type="submit" class="btn-danger-text">Delete</button>
+                  </form>
+                </div>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="empty-state">
+        {% if q or category or status %}
+          No products match that search &mdash; try clearing the filters.
+        {% else %}
+          No products yet &mdash; add the first one to get started.
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

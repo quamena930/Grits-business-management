@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Sales \u2014 {{ config.BUSINESS_NAME }}{% endblock %}
+{% block page_title %}Sales{% endblock %}
+{% block page_subtitle %}<div class="page-subtitle">Build a cart, check out, and print or download the receipt.</div>{% endblock %}
+
+{% block content %}
+<div class="grain-rule"><span></span><span></span><span></span></div>
+
+{% if current_user.role in ['admin', 'manager', 'cashier'] %}
+<div class="two-col">
+  <div class="card">
+    <h2 class="card-title">Add to cart</h2>
+    <form method="POST" action="{{ url_for('cart_add') }}">
+      {{ add_form.hidden_tag() }}
+      <div class="field">
+        {{ add_form.product_id.label }}
+        {{ add_form.product_id() }}
+      </div>
+      <div class="field-row">
+        <div class="field" style="max-width:120px;">
+          {{ add_form.quantity.label }}
+          {{ add_form.quantity(min="1") }}
+        </div>
+        <div class="field" style="flex:0; align-self:flex-end;">
+          {{ add_form.submit(class="btn btn-primary") }}
+        </div>
+      </div>
+    </form>
+
+    <div class="table-wrap" style="margin-top:14px;">
+      {% if cart_lines %}
+        <table>
+          <thead><tr><th>Product</th><th class="text-right">Qty</th><th class="text-right">Subtotal</th><th></th></tr></thead>
+          <tbody>
+            {% for line in cart_lines %}
+              <tr>
+                <td>{{ line.product.name }}</td>
+                <td class="text-right num">{{ line.quantity }}</td>
+                <td class="text-right num">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(line.subtotal) }}</td>
+                <td>
+                  <form method="POST" action="{{ url_for('cart_remove', index=loop.index0) }}">
+                    <button type="submit" class="btn-danger-text">Remove</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div class="cart-total-row">
+          <span>Cart subtotal</span>
+          <span class="num">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(cart_subtotal) }}</span>
+        </div>
+      {% else %}
+        <div class="empty-state">Your cart is empty &mdash; add a product above to get started.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="card-title">Checkout</h2>
+    {% if cart_lines %}
+      <form method="POST" action="{{ url_for('checkout') }}">
+        {{ checkout_form.hidden_tag() }}
+        <div class="field">
+          {{ checkout_form.customer_id.label }}
+          {{ checkout_form.customer_id() }}
+        </div>
+        <div class="field-row">
+          <div class="field">
+            {{ checkout_form.payment_method.label }}
+            {{ checkout_form.payment_method() }}
+          </div>
+          <div class="field">
+            {{ checkout_form.discount_amount.label }}
+            {{ checkout_form.discount_amount(step="0.01", min="0") }}
+          </div>
+        </div>
+        <div class="field-hint" style="margin-bottom:14px;">
+          Tax is applied automatically per product's tax rate. Discount is split proportionally across cart items.
+        </div>
+        <div style="display:flex; gap:10px;">
+          {{ checkout_form.submit(class="btn btn-gold") }}
+          <form method="POST" action="{{ url_for('cart_clear') }}">
+            <button type="submit" class="btn btn-outline">Clear cart</button>
+          </form>
+        </div>
+      </form>
+    {% else %}
+      <div class="empty-state">Add at least one item to the cart before checking out.</div>
+    {% endif %}
+  </div>
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state">Your account has view-only access to sales. Ask an admin or manager for cashier access to record sales.</div>
+</div>
+{% endif %}
+
+<div class="card" style="margin-top:18px;">
+  <h2 class="card-title">Recent receipts</h2>
+  {% if receipts %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Receipt</th><th>Date</th><th>Customer</th><th class="text-right">Items</th><th>Payment</th><th class="text-right">Total</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for r in receipts %}
+            <tr>
+              <td class="num">{{ r.receipt_number }}</td>
+              <td class="num">{{ r.date_created.strftime('%d %b, %H:%M') }}</td>
+              <td>{{ r.customer.full_name if r.customer else 'Walk-in' }}</td>
+              <td class="text-right num">{{ r.item_count }}</td>
+              <td>{{ r.payment_method_label }}</td>
+              <td class="text-right num">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(r.grand_total) }}</td>
+              <td>
+                <div class="row-actions">
+                  <a class="btn-link-text" href="{{ url_for('view_receipt', receipt_number=r.receipt_number) }}">View</a>
+                  {% if current_user.role in ['admin', 'manager', 'cashier'] %}
+                    <form method="POST" action="{{ url_for('delete_receipt', receipt_number=r.receipt_number) }}"
+                          onsubmit="return requestConfirm(this, 'Delete receipt {{ r.receipt_number }} and restore its stock?');">
+                      <button type="submit" class="btn-danger-text">Delete</button>
+                    </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state">No sales recorded yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

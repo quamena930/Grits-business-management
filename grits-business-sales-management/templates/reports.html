@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Reports \u2014 {{ config.BUSINESS_NAME }}{% endblock %}
+{% block page_title %}Reports{% endblock %}
+{% block page_subtitle %}<div class="page-subtitle">Filter by date range and export what you need.</div>{% endblock %}
+
+{% block content %}
+<div class="grain-rule"><span></span><span></span><span></span></div>
+
+<div class="card">
+  <form method="GET" class="field-row" style="align-items:flex-end; flex-wrap:wrap;">
+    <div class="field" style="max-width:180px;">
+      {{ form.start_date.label }}
+      {{ form.start_date(value=start_date) }}
+    </div>
+    <div class="field" style="max-width:180px;">
+      {{ form.end_date.label }}
+      {{ form.end_date(value=end_date) }}
+    </div>
+    <div class="field" style="flex:0;">
+      <button type="submit" class="btn btn-primary">Apply filter</button>
+    </div>
+    <div class="field" style="flex:0;">
+      <a class="btn btn-outline" href="{{ url_for('reports') }}">Clear</a>
+    </div>
+    <div class="field" style="flex:0; margin-left:auto;">
+      <a class="btn btn-gold" href="{{ url_for('export_report', start_date=start_date, end_date=end_date) }}">
+        Export CSV
+      </a>
+    </div>
+  </form>
+</div>
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-label">Revenue in range</div>
+    <div class="stat-value accent">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(total_revenue) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Profit in range</div>
+    <div class="stat-value {% if total_profit < 0 %}warn{% endif %}">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(total_profit) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Units sold</div>
+    <div class="stat-value">{{ total_units }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Transactions</div>
+    <div class="stat-value">{{ sales|map(attribute='receipt_number')|unique|list|length }}</div>
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <h2 class="card-title">Line items in range</h2>
+    <div class="table-wrap">
+      {% if sales %}
+        <table>
+          <thead>
+            <tr><th>Date</th><th>Receipt</th><th>Product</th><th class="text-right">Qty</th><th class="text-right">Total</th></tr>
+          </thead>
+          <tbody>
+            {% for s in sales %}
+              <tr>
+                <td class="num">{{ s.date_created.strftime('%d %b %Y, %H:%M') }}</td>
+                <td class="num"><a class="btn-link-text" href="{{ url_for('view_receipt', receipt_number=s.receipt_number) }}">{{ s.receipt_number }}</a></td>
+                <td>{{ s.product_name }}</td>
+                <td class="text-right num">{{ s.quantity }}</td>
+                <td class="text-right num">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(s.total) }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="empty-state">No sales in this range.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="card-title">Best sellers in range</h2>
+    {% if best_sellers %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Product</th><th class="text-right">Units</th><th class="text-right">Revenue</th></tr></thead>
+          <tbody>
+            {% for name, data in best_sellers %}
+              <tr>
+                <td>{{ name }}</td>
+                <td class="text-right num">{{ data.quantity }}</td>
+                <td class="text-right num">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(data.revenue) }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">Nothing to rank yet.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

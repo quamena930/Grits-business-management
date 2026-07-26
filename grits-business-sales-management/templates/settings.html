@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Settings \u2014 {{ config.BUSINESS_NAME }}{% endblock %}
+{% block page_title %}Settings{% endblock %}
+{% block page_subtitle %}<div class="page-subtitle">Business details used across the app, receipts, and reports.</div>{% endblock %}
+
+{% block content %}
+<div class="grain-rule"><span></span><span></span><span></span></div>
+
+<div class="card" style="max-width:560px;">
+  <form method="POST" novalidate>
+    {{ form.hidden_tag() }}
+
+    <div class="field">
+      {{ form.business_name.label }}
+      {{ form.business_name() }}
+      {% for error in form.business_name.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="field">
+      {{ form.business_address.label }}
+      {{ form.business_address() }}
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        {{ form.business_phone.label }}
+        {{ form.business_phone() }}
+      </div>
+      <div class="field">
+        {{ form.business_email.label }}
+        {{ form.business_email() }}
+        {% for error in form.business_email.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        {{ form.currency_symbol.label }}
+        {{ form.currency_symbol() }}
+        {% for error in form.currency_symbol.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="field">
+        {{ form.default_tax_rate.label }}
+        {{ form.default_tax_rate(step="0.1", min="0", max="100") }}
+      </div>
+      <div class="field">
+        {{ form.low_stock_threshold_default.label }}
+        {{ form.low_stock_threshold_default(min="0") }}
+      </div>
+    </div>
+
+    <div class="field">
+      {{ form.receipt_footer.label }}
+      {{ form.receipt_footer() }}
+    </div>
+
+    <div class="field-hint" style="margin-bottom:14px;">
+      Currency, tax, and low-stock defaults only apply to new products \u2014 existing products keep their own values.
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      {{ form.submit(class="btn btn-gold") }}
+    </div>
+  </form>
+</div>
+{% endblock %}

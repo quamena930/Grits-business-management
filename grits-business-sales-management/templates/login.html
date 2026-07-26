@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log in \u2014 {{ config.BUSINESS_NAME }}</title>
+  <script>
+    (function () {
+      try {
+        var theme = localStorage.getItem("grits-theme") || "light";
+        document.documentElement.setAttribute("data-theme", theme);
+      } catch (err) { /* localStorage unavailable - default light */ }
+    })();
+  </script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="login-shell">
+    <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode"
+            style="position:fixed; top:18px; right:18px; background:transparent; border-color:rgba(255,255,255,0.25); color:#efece3;">
+      &#127769;
+    </button>
+    <div class="login-card">
+      <div class="login-brand">Grits<span class="dot">.</span></div>
+      <div class="login-sub">{{ config.BUSINESS_NAME }} &middot; Sales Management</div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="toast-container" id="toastContainer" style="position:static; max-width:none; margin-bottom:16px;">
+            {% for category, message in messages %}
+              <div class="toast toast-{{ category }}" role="status">
+                <span class="toast-message">{{ message }}</span>
+                <button type="button" class="toast-close" aria-label="Dismiss">&times;</button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST" novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="field">
+          {{ form.username.label }}
+          {{ form.username(autofocus=true, autocomplete="username") }}
+          {% for error in form.username.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+        </div>
+
+        <div class="field">
+          {{ form.password.label }}
+          {{ form.password(autocomplete="current-password") }}
+          {% for error in form.password.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+        </div>
+
+        {{ form.submit(class="btn btn-gold btn-block") }}
+      </form>
+
+      <div class="login-hint">First time here? Default login is admin / admin123 &mdash; change it after signing in.</div>
+    </div>
+  </div>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}{% if mode == 'edit' %}Edit customer{% else %}Add customer{% endif %} \u2014 {{ config.BUSINESS_NAME }}{% endblock %}
+{% block page_title %}{% if mode == 'edit' %}Edit customer{% else %}Add customer{% endif %}{% endblock %}
+
+{% block content %}
+<div class="grain-rule"><span></span><span></span><span></span></div>
+
+<div class="card" style="max-width:560px;">
+  <form method="POST" novalidate>
+    {{ form.hidden_tag() }}
+
+    <div class="field-row">
+      <div class="field">
+        {{ form.full_name.label }}
+        {{ form.full_name() }}
+        {% for error in form.full_name.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="field">
+        {{ form.customer_type.label }}
+        {{ form.customer_type() }}
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        {{ form.phone.label }}
+        {{ form.phone() }}
+      </div>
+      <div class="field">
+        {{ form.email.label }}
+        {{ form.email() }}
+        {% for error in form.email.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+      </div>
+    </div>
+
+    <div class="field">
+      {{ form.address.label }}
+      {{ form.address() }}
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        {{ form.city.label }}
+        {{ form.city() }}
+      </div>
+      <div class="field">
+        {{ form.country.label }}
+        {{ form.country() }}
+      </div>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:18px;">
+      {{ form.submit(class="btn btn-gold") }}
+      <a href="{{ url_for('customers') }}" class="btn btn-outline">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

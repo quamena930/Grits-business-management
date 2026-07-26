@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ config.BUSINESS_NAME }}{% endblock %}</title>
+  <script>
+    (function () {
+      try {
+        var theme = localStorage.getItem("grits-theme") || "light";
+        document.documentElement.setAttribute("data-theme", theme);
+      } catch (err) { /* localStorage unavailable - default light */ }
+    })();
+  </script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">Grits<span class="dot">.</span></div>
+      <div class="brand-tagline">Sales &amp; Stock</div>
+
+      <nav class="nav-group">
+        <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+          <span class="nav-icon">&#9673;</span> Dashboard
+        </a>
+        <a class="nav-link {% if request.endpoint in ['sales', 'edit_sale', 'view_receipt'] %}active{% endif %}" href="{{ url_for('sales') }}">
+          <span class="nav-icon">&#9776;</span> Sales
+        </a>
+        <a class="nav-link {% if request.endpoint in ['products', 'add_product', 'edit_product'] %}active{% endif %}" href="{{ url_for('products') }}">
+          <span class="nav-icon">&#9724;</span> Inventory
+        </a>
+        <a class="nav-link {% if request.endpoint in ['customers', 'add_customer', 'edit_customer', 'view_customer'] %}active{% endif %}" href="{{ url_for('customers') }}">
+          <span class="nav-icon">&#9651;</span> Customers
+        </a>
+        <a class="nav-link {% if request.endpoint in ['suppliers', 'add_supplier', 'edit_supplier'] %}active{% endif %}" href="{{ url_for('suppliers') }}">
+          <span class="nav-icon">&#9671;</span> Suppliers
+        </a>
+        <a class="nav-link {% if request.endpoint == 'reports' %}active{% endif %}" href="{{ url_for('reports') }}">
+          <span class="nav-icon">&#9776;</span> Reports
+        </a>
+        <a class="nav-link {% if request.endpoint == 'activity_log' %}active{% endif %}" href="{{ url_for('activity_log') }}">
+          <span class="nav-icon">&#9737;</span> Activity log
+        </a>
+        {% if current_user.is_authenticated and current_user.role == 'admin' %}
+          <a class="nav-link {% if request.endpoint == 'users' %}active{% endif %}" href="{{ url_for('users') }}">
+            <span class="nav-icon">&#9822;</span> Users
+          </a>
+          <a class="nav-link {% if request.endpoint == 'settings_page' %}active{% endif %}" href="{{ url_for('settings_page') }}">
+            <span class="nav-icon">&#9881;</span> Settings
+          </a>
+        {% endif %}
+      </nav>
+
+      <div class="sidebar-footer">
+        {% if current_user.is_authenticated %}
+          <div class="sidebar-user">Signed in as <strong>{{ current_user.username }}</strong> &middot; {{ current_user.role_label }}</div>
+          {% if current_user.role in ['admin', 'manager'] %}
+            <form action="{{ url_for('create_backup') }}" method="POST" style="margin-bottom:10px;">
+              <button type="submit" class="btn btn-outline btn-block" style="color:#efece3;border-color:rgba(255,255,255,0.2);">
+                Back up data
+              </button>
+            </form>
+          {% endif %}
+          <a class="logout-link" href="{{ url_for('logout') }}">Log out</a>
+        {% endif %}
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+          {% block page_subtitle %}{% endblock %}
+        </div>
+        <div class="topbar-right">
+          <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">&#127769;</button>
+          <div class="topbar-date">{{ today_display if today_display else '' }}</div>
+        </div>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="toast-container" id="toastContainer">
+            {% for category, message in messages %}
+              <div class="toast toast-{{ category }}" role="status">
+                <span class="toast-message">{{ message }}</span>
+                <button type="button" class="toast-close" aria-label="Dismiss">&times;</button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <div style="margin-top:20px;">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="confirmModalBackdrop" hidden>
+    <div class="modal-card" role="alertdialog" aria-modal="true" aria-labelledby="confirmModalTitle">
+      <h3 id="confirmModalTitle" class="modal-title">Are you sure?</h3>
+      <p class="modal-body" id="confirmModalBody"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" id="confirmModalCancel">Cancel</button>
+        <button type="button" class="btn btn-danger-solid" id="confirmModalConfirm">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

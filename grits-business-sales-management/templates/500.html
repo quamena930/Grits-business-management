@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Something went wrong</title>
+  <script>
+    (function () {
+      try {
+        var theme = localStorage.getItem("grits-theme") || "light";
+        document.documentElement.setAttribute("data-theme", theme);
+      } catch (err) { /* localStorage unavailable - default light */ }
+    })();
+  </script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="error-shell">
+    <div class="error-code">500</div>
+    <div class="error-message">Something went wrong on our end. Please try again, and check the server log if it keeps happening.</div>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-gold">Back to dashboard</a>
+  </div>
+</body>
+</html>

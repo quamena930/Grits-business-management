@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Suppliers \u2014 {{ config.BUSINESS_NAME }}{% endblock %}
+{% block page_title %}Suppliers{% endblock %}
+{% block page_subtitle %}<div class="page-subtitle">Vendors the shop buys stock from.</div>{% endblock %}
+
+{% block content %}
+<div class="grain-rule"><span></span><span></span><span></span></div>
+
+<div class="card">
+  <div class="section-head" style="margin-bottom:16px;">
+    <h2 class="card-title" style="margin-bottom:0;">All suppliers</h2>
+    {% if current_user.role in ['admin', 'manager'] %}
+      <a href="{{ url_for('add_supplier') }}" class="btn btn-gold">+ Add supplier</a>
+    {% endif %}
+  </div>
+
+  <form method="GET" class="filter-bar">
+    <div class="field grow">
+      <label>Search</label>
+      <input type="text" name="q" value="{{ q }}" placeholder="Name or contact person&hellip;">
+    </div>
+    <div class="field" style="flex:0;">
+      <button type="submit" class="btn btn-primary">Search</button>
+    </div>
+    {% if q %}
+      <div class="field" style="flex:0;">
+        <a class="btn btn-outline" href="{{ url_for('suppliers') }}">Clear</a>
+      </div>
+    {% endif %}
+  </form>
+
+  <div class="table-wrap" style="margin-top:16px;">
+    {% if suppliers %}
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Contact</th><th>Phone</th><th class="text-right">Products</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for s in suppliers %}
+            <tr>
+              <td>{{ s.name }}</td>
+              <td>{{ s.contact_person or '\u2014' }}</td>
+              <td>{{ s.phone or '\u2014' }}</td>
+              <td class="text-right num">{{ s.products|length }}</td>
+              <td>
+                {% if current_user.role in ['admin', 'manager'] %}
+                <div class="row-actions">
+                  <a class="btn-link-text" href="{{ url_for('edit_supplier', supplier_id=s.id) }}">Edit</a>
+                  <form method="POST" action="{{ url_for('delete_supplier', supplier_id=s.id) }}"
+                        onsubmit="return requestConfirm(this, 'Delete {{ s.name }}?');">
+                    <button type="submit" class="btn-danger-text">Delete</button>
+                  </form>
+                </div>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="empty-state">
+        {% if q %}No suppliers match that search.{% else %}No suppliers yet &mdash; add the first one to get started.{% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

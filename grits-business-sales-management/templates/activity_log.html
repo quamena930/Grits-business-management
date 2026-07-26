@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Activity log \u2014 {{ config.BUSINESS_NAME }}{% endblock %}
+{% block page_title %}Activity log{% endblock %}
+{% block page_subtitle %}<div class="page-subtitle">Every sale, stock change, login, and backup, most recent first.</div>{% endblock %}
+
+{% block content %}
+<div class="grain-rule"><span></span><span></span><span></span></div>
+
+<div class="card">
+  {% if entries %}
+    <ul class="activity-list">
+      {% for entry in entries %}
+        <li class="activity-item">
+          <span class="activity-dot"></span>
+          <div>
+            <div class="activity-text">{{ entry.description }}</div>
+            <div class="activity-time">{{ entry.created_at.strftime('%d %b %Y, %H:%M') }} &middot; {{ entry.actor or 'system' }} &middot; {{ entry.action }}</div>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+
+    <div class="pagination-bar">
+      {% if has_prev %}
+        <a class="btn btn-outline" href="{{ url_for('activity_log', page=page-1) }}">&larr; Newer</a>
+      {% endif %}
+      <span class="page-indicator">Page {{ page }} of {{ total_pages }}</span>
+      {% if has_next %}
+        <a class="btn btn-outline" href="{{ url_for('activity_log', page=page+1) }}">Older &rarr;</a>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="empty-state">No activity recorded yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

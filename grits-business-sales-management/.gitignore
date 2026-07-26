@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Instance data (local DB, uploads, generated files - never commit these)
+instance/*.db
+exports/*.csv
+backups/*.json
+static/images/products/*
+!static/images/products/.gitkeep
+
+# Environment
+.env
+
+# Editor/OS
+.DS_Store
+.vscode/
+.idea/

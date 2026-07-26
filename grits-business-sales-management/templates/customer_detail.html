@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}{{ customer.full_name }} \u2014 {{ config.BUSINESS_NAME }}{% endblock %}
+{% block page_title %}{{ customer.full_name }}{% endblock %}
+{% block page_subtitle %}<div class="page-subtitle">{{ customer.customer_type|capitalize }} customer{% if customer.city %} &middot; {{ customer.city }}{% endif %}</div>{% endblock %}
+
+{% block content %}
+<div class="grain-rule"><span></span><span></span><span></span></div>
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-label">Total spent</div>
+    <div class="stat-value accent">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(customer.total_spent) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Visits</div>
+    <div class="stat-value">{{ customer.purchase_count }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Last purchase</div>
+    <div class="stat-value" style="font-size:16px;">
+      {{ customer.last_purchase_at.strftime('%d %b %Y') if customer.last_purchase_at else '\u2014' }}
+    </div>
+  </div>
+</div>
+
+<div class="two-col" style="margin-top:18px;">
+  <div class="card">
+    <h2 class="card-title">Contact details</h2>
+    <div class="detail-list">
+      <div><span>Phone</span><span>{{ customer.phone or '\u2014' }}</span></div>
+      <div><span>Email</span><span>{{ customer.email or '\u2014' }}</span></div>
+      <div><span>Address</span><span>{{ customer.address or '\u2014' }}</span></div>
+      <div><span>City</span><span>{{ customer.city or '\u2014' }}</span></div>
+      <div><span>Country</span><span>{{ customer.country or '\u2014' }}</span></div>
+    </div>
+    <div style="margin-top:16px;">
+      {% if current_user.role in ['admin', 'manager'] %}
+        <a href="{{ url_for('edit_customer', customer_id=customer.id) }}" class="btn btn-outline">Edit details</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="card-title">Purchase history</h2>
+    {% if purchases %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Receipt</th><th>Date</th><th class="text-right">Items</th><th class="text-right">Total</th></tr></thead>
+          <tbody>
+            {% for p in purchases %}
+              <tr>
+                <td><a class="btn-link-text" href="{{ url_for('view_receipt', receipt_number=p.receipt_number) }}">{{ p.receipt_number }}</a></td>
+                <td class="num">{{ p.date_created.strftime('%d %b %Y') }}</td>
+                <td class="text-right num">{{ p.item_count }}</td>
+                <td class="text-right num">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(p.grand_total) }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">No purchases recorded for this customer yet.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+{% block title %}Dashboard \u2014 {{ config.BUSINESS_NAME }}{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}<div class="page-subtitle">A quick look at how the shop is doing.</div>{% endblock %}
+
+{% block content %}
+<div class="grain-rule"><span></span><span></span><span></span></div>
+
+<div class="section-label">This period</div>
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-label">Today's sales</div>
+    <div class="stat-value accent">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(todays_sales) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">This week</div>
+    <div class="stat-value">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(weekly_sales) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">This month</div>
+    <div class="stat-value">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(monthly_sales) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">This year</div>
+    <div class="stat-value">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(annual_sales) }}</div>
+  </div>
+</div>
+
+<div class="section-label">All time</div>
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-label">Gross revenue</div>
+    <div class="stat-value">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(gross_revenue) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Net profit</div>
+    <div class="stat-value {% if net_profit < 0 %}warn{% endif %}">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(net_profit) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Transactions</div>
+    <div class="stat-value">{{ transaction_count }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Products sold</div>
+    <div class="stat-value">{{ products_sold }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Customers on file</div>
+    <div class="stat-value">{{ customer_count }}</div>
+  </div>
+</div>
+
+<div class="section-label">Inventory</div>
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-label">Inventory value</div>
+    <div class="stat-value">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(inventory_value) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Products tracked</div>
+    <div class="stat-value">{{ product_count }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Low stock</div>
+    <div class="stat-value {% if low_stock_products %}warn{% endif %}">{{ low_stock_products|length }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Out of stock</div>
+    <div class="stat-value {% if out_of_stock_products %}warn{% endif %}">{{ out_of_stock_products|length }}</div>
+  </div>
+</div>
+
+<div class="card chart-card" style="margin-top:22px;">
+  <h2 class="card-title">Revenue &mdash; last 30 days</h2>
+  <canvas id="trendChart" height="90"></canvas>
+</div>
+
+<div class="two-col" style="margin-top:18px;">
+  <div class="card chart-card">
+    <h2 class="card-title">Top selling products</h2>
+    {% if top_products %}
+      <canvas id="topProductsChart" height="220"></canvas>
+    {% else %}
+      <div class="empty-state">Record a sale to see your best sellers here.</div>
+    {% endif %}
+  </div>
+  <div class="card chart-card">
+    <h2 class="card-title">Revenue by category</h2>
+    {% if category_labels %}
+      <canvas id="categoryChart" height="220"></canvas>
+    {% else %}
+      <div class="empty-state">Assign categories to products to see this breakdown.</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="two-col" style="margin-top:18px;">
+  <div class="card">
+    <h2 class="card-title">Stock alerts</h2>
+    {% if low_stock_products or out_of_stock_products %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Product</th><th class="text-right">In stock</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for p in out_of_stock_products %}
+              <tr>
+                <td>{{ p.name }}</td>
+                <td class="text-right num">{{ p.stock_quantity }}</td>
+                <td><span class="badge badge-out">Out of stock</span></td>
+              </tr>
+            {% endfor %}
+            {% for p in low_stock_products %}
+              <tr>
+                <td>{{ p.name }}</td>
+                <td class="text-right num">{{ p.stock_quantity }}</td>
+                <td><span class="badge badge-low">Low stock</span></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">Every product is comfortably stocked.</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2 class="card-title">Recent activity</h2>
+    {% if recent_activity %}
+      <ul class="activity-list">
+        {% for entry in recent_activity %}
+          <li class="activity-item">
+            <span class="activity-dot"></span>
+            <div>
+              <div class="activity-text">{{ entry.description }}</div>
+              <div class="activity-time">{{ entry.created_at.strftime('%d %b, %H:%M') }} &middot; {{ entry.actor or 'system' }}</div>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="empty-state">Activity from sales, stock changes, and logins will show up here.</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card" style="margin-top:18px;">
+  <div class="section-head">
+    <h2 class="card-title" style="margin-bottom:0;">Recent sales</h2>
+    <a href="{{ url_for('sales') }}" class="btn-link-text">View all &rarr;</a>
+  </div>
+  {% if recent_sales %}
+    <div class="table-wrap" style="margin-top:10px;">
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Product</th><th class="text-right">Qty</th><th class="text-right">Total</th></tr>
+        </thead>
+        <tbody>
+          {% for s in recent_sales %}
+            <tr>
+              <td class="num">{{ s.date_created.strftime('%d %b, %H:%M') }}</td>
+              <td>{{ s.product_name }}</td>
+              <td class="text-right num">{{ s.quantity }}</td>
+              <td class="text-right num">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(s.total) }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state">No sales recorded yet. Head to Sales to record the first one.</div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script>
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  const gold = cssVar('--gold') || '#c99a2e';
+  const sage = cssVar('--sage') || '#4b7a51';
+  const brick = cssVar('--brick') || '#b33f3f';
+  const inkSoft = cssVar('--ink-soft') || '#57534a';
+  const gridColor = cssVar('--border') || '#f0eee7';
+  const monoFont = { family: 'IBM Plex Mono', size: 11 };
+  const bodyFont = { family: 'Inter', size: 12 };
+
+  new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+      labels: {{ trend_labels|tojson }},
+      datasets: [{
+        label: 'Revenue',
+        data: {{ trend_values|tojson }},
+        borderColor: gold,
+        backgroundColor: gold + '2a',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 0,
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: gridColor }, ticks: { font: monoFont, color: inkSoft } },
+        x: { grid: { display: false }, ticks: { font: bodyFont, color: inkSoft, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } }
+      }
+    }
+  });
+
+  {% if top_products %}
+  new Chart(document.getElementById('topProductsChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ top_products|map(attribute=0)|list|tojson }},
+      datasets: [{
+        label: 'Units sold',
+        data: {{ top_products|map(attribute=1)|list|tojson }},
+        backgroundColor: gold,
+        borderRadius: 4,
+        maxBarThickness: 22
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { beginAtZero: true, grid: { color: gridColor }, ticks: { font: monoFont, color: inkSoft } },
+        y: { grid: { display: false }, ticks: { font: bodyFont, color: inkSoft } }
+      }
+    }
+  });
+  {% endif %}
+
+  {% if category_labels %}
+  new Chart(document.getElementById('categoryChart'), {
+    type: 'doughnut',
+    data: {
+      labels: {{ category_labels|tojson }},
+      datasets: [{
+        data: {{ category_values|tojson }},
+        backgroundColor: [gold, sage, brick, '#8a99b3', '#c98a5a', '#7a6bb0'],
+        borderColor: cssVar('--card') || '#ffffff',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: bodyFont, color: inkSoft, boxWidth: 10, padding: 12 } }
+      }
+    }
+  });
+  {% endif %}
+</script>
+{% endblock %}

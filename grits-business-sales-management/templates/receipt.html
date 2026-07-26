@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Receipt {{ receipt_number }} \u2014 {{ config.BUSINESS_NAME }}{% endblock %}
+{% block page_title %}Receipt{% endblock %}
+{% block page_subtitle %}<div class="page-subtitle">{{ receipt_number }}</div>{% endblock %}
+
+{% block content %}
+<div class="grain-rule no-print"><span></span><span></span><span></span></div>
+
+<div class="receipt-actions no-print">
+  <a href="{{ url_for('sales') }}" class="btn btn-outline">&larr; Back to sales</a>
+  <button type="button" class="btn btn-outline" onclick="window.print()">Print</button>
+  <a href="{{ url_for('receipt_pdf', receipt_number=receipt_number) }}" class="btn btn-gold">Download PDF</a>
+</div>
+
+<div class="card receipt-card">
+  <div class="receipt-header">
+    <div class="receipt-business-name">{{ config.BUSINESS_NAME }}</div>
+    {% if config.BUSINESS_ADDRESS %}<div class="receipt-meta">{{ config.BUSINESS_ADDRESS }}</div>{% endif %}
+    {% if config.BUSINESS_PHONE %}<div class="receipt-meta">{{ config.BUSINESS_PHONE }}</div>{% endif %}
+  </div>
+
+  <div class="grain-rule"><span></span><span></span><span></span></div>
+
+  <div class="receipt-info">
+    <div><span>Receipt</span><span class="num">{{ receipt_number }}</span></div>
+    <div><span>Date</span><span class="num">{{ date_created.strftime('%d %b %Y, %H:%M') }}</span></div>
+    <div><span>Cashier</span><span>{{ cashier or '\u2014' }}</span></div>
+    {% if customer %}<div><span>Customer</span><span>{{ customer.full_name }}</span></div>{% endif %}
+    <div><span>Payment</span><span>{{ payment_method_label }}</span></div>
+  </div>
+
+  <div class="table-wrap" style="margin-top:14px;">
+    <table>
+      <thead>
+        <tr><th>Item</th><th class="text-right">Qty</th><th class="text-right">Price</th><th class="text-right">Discount</th><th class="text-right">Tax</th><th class="text-right">Total</th></tr>
+      </thead>
+      <tbody>
+        {% for line in lines %}
+          <tr>
+            <td>{{ line.product_name }}</td>
+            <td class="text-right num">{{ line.quantity }}</td>
+            <td class="text-right num">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(line.unit_price) }}</td>
+            <td class="text-right num">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(line.line_discount) }}</td>
+            <td class="text-right num">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(line.line_tax) }}</td>
+            <td class="text-right num">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(line.total) }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="receipt-totals">
+    <div><span>Subtotal</span><span class="num">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(subtotal) }}</span></div>
+    {% if total_discount %}<div><span>Discount</span><span class="num">-{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(total_discount) }}</span></div>{% endif %}
+    {% if total_tax %}<div><span>Tax</span><span class="num">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(total_tax) }}</span></div>{% endif %}
+    <div class="receipt-grand-total"><span>Total</span><span class="num">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(grand_total) }}</span></div>
+  </div>
+
+  <div class="receipt-footer">{{ config.RECEIPT_FOOTER }}</div>
+</div>
+
+<div class="card no-print" style="margin-top:18px; max-width:640px;">
+  <h2 class="card-title">Line items</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Item</th><th class="text-right">Qty</th><th></th></tr></thead>
+      <tbody>
+        {% for line in lines %}
+          <tr>
+            <td>{{ line.product_name }}</td>
+            <td class="text-right num">{{ line.quantity }}</td>
+            <td>
+              {% if current_user.role in ['admin', 'manager', 'cashier'] %}
+              <div class="row-actions">
+                <a class="btn-link-text" href="{{ url_for('edit_sale', sale_id=line.id) }}">Edit</a>
+                <form method="POST" action="{{ url_for('delete_sale', sale_id=line.id) }}"
+                      onsubmit="return requestConfirm(this, 'Remove {{ line.product_name }} from this receipt?');">
+                  <button type="submit" class="btn-danger-text">Delete</button>
+                </form>
+              </div>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

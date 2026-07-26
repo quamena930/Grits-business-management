@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Users \u2014 {{ config.BUSINESS_NAME }}{% endblock %}
+{% block page_title %}Users{% endblock %}
+{% block page_subtitle %}<div class="page-subtitle">Staff accounts and their access level.</div>{% endblock %}
+
+{% block content %}
+<div class="grain-rule"><span></span><span></span><span></span></div>
+
+<div class="card">
+  <div class="section-head" style="margin-bottom:16px;">
+    <h2 class="card-title" style="margin-bottom:0;">All users</h2>
+    <a href="{{ url_for('add_user') }}" class="btn btn-gold">+ Add user</a>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Username</th><th>Role</th><th>Created</th><th></th></tr></thead>
+      <tbody>
+        {% for u in users %}
+          <tr>
+            <td>{{ u.username }}{% if u.id == current_user.id %} <span class="badge badge-ok">You</span>{% endif %}</td>
+            <td><span class="badge badge-low">{{ u.role_label }}</span></td>
+            <td class="num">{{ u.created_at.strftime('%d %b %Y') if u.created_at else '\u2014' }}</td>
+            <td>
+              <div class="row-actions">
+                <a class="btn-link-text" href="{{ url_for('edit_user', user_id=u.id) }}">Edit</a>
+                {% if u.id != current_user.id %}
+                  <form method="POST" action="{{ url_for('delete_user', user_id=u.id) }}"
+                        onsubmit="return requestConfirm(this, 'Delete the account \'{{ u.username }}\'?');">
+                    <button type="submit" class="btn-danger-text">Delete</button>
+                  </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card" style="margin-top:18px;">
+  <h2 class="card-title">What each role can do</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Area</th><th>Admin</th><th>Manager</th><th>Cashier</th><th>Viewer</th></tr></thead>
+      <tbody>
+        <tr><td>View dashboard, inventory, customers, suppliers, sales, reports</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Record sales (cart, checkout, receipts)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td>&mdash;</td></tr>
+        <tr><td>Add / edit / delete products, customers, suppliers</td><td>&#10003;</td><td>&#10003;</td><td>&mdash;</td><td>&mdash;</td></tr>
+        <tr><td>Create backups</td><td>&#10003;</td><td>&#10003;</td><td>&mdash;</td><td>&mdash;</td></tr>
+        <tr><td>Settings &amp; user management</td><td>&#10003;</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

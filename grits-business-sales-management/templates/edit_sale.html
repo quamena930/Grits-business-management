@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Edit sale \u2014 {{ config.BUSINESS_NAME }}{% endblock %}
+{% block page_title %}Edit sale{% endblock %}
+{% block page_subtitle %}<div class="page-subtitle">Receipt {{ sale.receipt_number }} &middot; originally {{ sale.date_created.strftime('%d %b %Y, %H:%M') }}</div>{% endblock %}
+
+{% block content %}
+<div class="grain-rule"><span></span><span></span><span></span></div>
+
+<div class="card" style="max-width:440px;">
+  <form method="POST" novalidate>
+    {{ form.hidden_tag() }}
+
+    <div class="field">
+      {{ form.product_id.label }}
+      {{ form.product_id() }}
+      {% for error in form.product_id.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="field">
+      {{ form.quantity.label }}
+      {{ form.quantity(min="1") }}
+      {% for error in form.quantity.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:18px;">
+      {{ form.submit(class="btn btn-gold") }}
+      <a href="{{ url_for('view_receipt', receipt_number=sale.receipt_number) }}" class="btn btn-outline">Cancel</a>
+    </div>
+  </form>
+  <div class="helper-text">Changing the product or quantity adjusts stock levels automatically to stay accurate.</div>
+</div>
+{% endblock %}

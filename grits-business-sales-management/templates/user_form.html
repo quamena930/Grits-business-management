@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{% if mode == 'edit' %}Edit user{% else %}Add user{% endif %} \u2014 {{ config.BUSINESS_NAME }}{% endblock %}
+{% block page_title %}{% if mode == 'edit' %}Edit user{% else %}Add user{% endif %}{% endblock %}
+
+{% block content %}
+<div class="grain-rule"><span></span><span></span><span></span></div>
+
+<div class="card" style="max-width:440px;">
+  <form method="POST" novalidate>
+    {{ form.hidden_tag() }}
+
+    <div class="field">
+      {{ form.username.label }}
+      {{ form.username() }}
+      {% for error in form.username.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="field">
+      {{ form.password.label }}
+      {{ form.password() }}
+      <div class="field-hint">{{ form.password.description }}</div>
+      {% for error in form.password.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="field">
+      {{ form.role.label }}
+      {{ form.role() }}
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:18px;">
+      {{ form.submit(class="btn btn-gold") }}
+      <a href="{{ url_for('users') }}" class="btn btn-outline">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
